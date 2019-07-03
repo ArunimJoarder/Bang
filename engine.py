@@ -21,6 +21,15 @@ PURPLE      = (158,0,198)
 
 
 
+
+
+# initialize pygame and create a window
+pygame.init()
+pygame.mixer.init()
+screen = pygame.display.set_mode((screenWidth, screenHeight))
+pygame.display.set_caption("Bang!")
+clock = pygame.time.Clock()
+
 class Mob(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -36,7 +45,6 @@ class Mob(pygame.sprite.Sprite):
         self.rect           = self.image.get_rect()
         self.rect.bottom   = 0.75 * screenHeight + 2
         self.radius         = int(self.rect.width * .9 / 2)
-        pygame.draw.circle(self.image, WHITE, self.rect.center, self.radius)
         self.walkCount      = 0
 
         x1 = rn.randrange(-50, 0)
@@ -59,13 +67,13 @@ class Mob(pygame.sprite.Sprite):
 
     def update(self):
         if self.isDead:
-            mobs.remove(self)
-            self.rect.bottom   = 0.75 * screenHeight + 6
+            self.radius         = 1
+            self.rect.bottom    = 0.75 * screenHeight + 6
             self.image          = mob_images[self.gender_toss + 2][int(self.deadCount)]
-            self.size = self.image.get_size()
-            self.image = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
+            self.size           = self.image.get_size()
+            self.image          = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
             if self.toss:
-                self.image = pygame.transform.flip(self.image, True, False)
+                self.image      = pygame.transform.flip(self.image, True, False)
             self.image.set_colorkey(BLACK)
 
             self.deadCount += 0.5
@@ -78,13 +86,12 @@ class Mob(pygame.sprite.Sprite):
 
             self.image          = mob_images[self.gender_toss][int(self.walkCount)]
             self.image.set_colorkey(BLACK)        
-            self.size = self.image.get_size()
-            self.image = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
+            self.size           = self.image.get_size()
+            self.image          = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
             if self.toss:
-                self.image = pygame.transform.flip(self.image, True, False)
+                self.image      = pygame.transform.flip(self.image, True, False)
 
             self.image.set_colorkey(BLACK)
-            pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
 
             self.walkCount      += 0.25 * abs(self.speedx)
             if self.walkCount > 9:
@@ -128,14 +135,13 @@ class Bullet(pygame.sprite.Sprite):
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
+        # Initiate Sprite
         pygame.sprite.Sprite.__init__(self)
 
-        self.isShooting     = 0
-
-        self.image          = hero_images[self.isShooting][0]
+        self.image          = hero_images[0][0]
+        self.size           = self.image.get_size()
+        self.image          = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
         self.image.set_colorkey(BLACK)
-        self.size = self.image.get_size()
-        self.image = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
 
         self.rect           = self.image.get_rect()
         self.rect.bottom    = 0.75 * screenHeight + 10
@@ -144,21 +150,24 @@ class Player(pygame.sprite.Sprite):
 
         # Motion
         self.speedx = 0
-        self.bottom = self.rect.bottom
 
-        # Orientation
+        # Status
+        self.isDead     = 0
+        self.deadCount  = 0
+
         self.isFacing   = 1         # facing Right
+        
         self.isJumping  = 0
-        self.isRunning  = 0
         self.jumpCount  = 0
-        self.runCount   = 0
-        self.shootCount = 0
 
-        if self.isFacing == -1:
-            self.radius = 0
-        else:
-            self.radius = int(self.rect.width * 0.3 / 2)
+        self.isRunning  = 0
+        self.runCount   = 0
+
+        self.bottom     = self.rect.bottom
+
         # Arms & Ammunition
+        self.isShooting     = 0
+        self.shootCount = 0
         self.ammo = 15
     
     def jump(self):
@@ -177,66 +186,76 @@ class Player(pygame.sprite.Sprite):
         self.isRunning = 0
         self.speedx = 0
 
-        # Process Key Press
-        key_state = pygame.key.get_pressed()
-        if key_state[pygame.K_RIGHT]:
-            self.isRunning = 1
-            self.speedx = 5
-            self.isFacing = 1
-        if key_state[pygame.K_LEFT]:
-            self.isRunning = 1
-            self.speedx = -5
-            self.isFacing = -1
-        if key_state[pygame.K_UP]:
-            self.isJumping = 1
-        
-        if self.isFacing == -1:
-            self.radius = 0
+        if self.isDead:
+            self.image  = hero_images[3][int(self.deadCount)]
+            
+            self.size       = self.image.get_size()
+            self.image      = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
+
+            if self.isFacing == -1:
+                self.image  = pygame.transform.flip(self.image, True, False)
+            
+            self.image.set_colorkey(BLACK)
+
+            self.deadCount += 0.5
+            if self.deadCount > 14:
+                self.isDead = 2
+                self.deadCount = 0
+
         else:
-            self.radius = int(self.rect.width * 0.3 / 2)
+            # Process Key Press
+            key_state = pygame.key.get_pressed()
+            if key_state[pygame.K_RIGHT]:
+                self.isRunning  = 1
+                self.speedx     = 5
+                self.isFacing   = 1
+            if key_state[pygame.K_LEFT]:
+                self.isRunning  = 1
+                self.speedx     = -5
+                self.isFacing   = -1
+            if key_state[pygame.K_UP]:
+                self.isJumping  = 1
+            
+            if self.isFacing == -1:
+                self.radius     = 0
+            else:
+                self.radius     = int(self.rect.width * 0.3 / 2)
 
-        # Update Motion
-        if self.isShooting:
-            self.image = hero_images[1][int(self.shootCount)]
-            self.shootCount += 0.5
-            if self.shootCount == 6:
-                self.shootCount = 0
-                self.isShooting = 0
-        elif self.isRunning:
-            self.image = hero_images[0][int(self.runCount)]
-            self.runCount += 0.5
-            if self.runCount == 13:
-                self.runCount = 0
-        else:
-            self.image = hero_images[1][0]
+            # Update Motion
+            if self.isShooting:
+                self.image = hero_images[1][int(self.shootCount)]
+                self.shootCount += 0.5
+                if self.shootCount == 6:
+                    self.shootCount = 0
+                    self.isShooting = 0
+            elif self.isRunning:
+                self.image      = hero_images[0][int(self.runCount)]
+                self.runCount   += 0.25
+                if self.runCount == 13:
+                    self.runCount = 0
+            else:
+                self.image = hero_images[1][0]
 
-        if self.isJumping:
-            self.image = hero_images[2][int(self.jumpCount)]
+            if self.isJumping:
+                self.image = hero_images[2][int(self.jumpCount)]
 
-        self.size = self.image.get_size()
-        self.image = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
+            self.size       = self.image.get_size()
+            self.image      = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
 
-        if self.isFacing == -1:
-            self.image = pygame.transform.flip(self.image, True, False)
-        
-        self.image.set_colorkey(BLACK)
+            if self.isFacing == -1:
+                self.image  = pygame.transform.flip(self.image, True, False)
+            
+            self.image.set_colorkey(BLACK)
 
-        if self.isJumping:
-            self.jump()
-        self.rect.x += self.speedx
+            if self.isJumping:
+                self.jump()
+            self.rect.x += self.speedx
 
-        # Boundary Conditions
-        if self.rect.right > screenWidth:
-            self.rect.right = screenWidth
-        if self.rect.left < 0:
-            self.rect.left = 0
-
-# initialize pygame and create a window
-pygame.init()
-pygame.mixer.init()
-screen = pygame.display.set_mode((screenWidth, screenHeight))
-pygame.display.set_caption("Bang!")
-clock = pygame.time.Clock()
+            # Boundary Conditions
+            if self.rect.right > screenWidth:
+                self.rect.right = screenWidth
+            if self.rect.left < 0:
+                self.rect.left  = 0
 
 # define images
 img = path.join(path.dirname(__file__), 'img')
@@ -346,9 +365,33 @@ hero_jump = [pygame.image.load(path.join(hero_sprites, 'Jump Start', 'Jump Start
              pygame.image.load(path.join(hero_sprites, 'Jump Start', 'Jump Start_001.png')).convert(),
              pygame.image.load(path.join(hero_sprites, 'Jump Start', 'Jump Start_008.png')).convert()]
 
+hero_dead = [pygame.image.load(path.join(hero_sprites, 'Death', 'Death_000.png')).convert(),
+             pygame.image.load(path.join(hero_sprites, 'Death', 'Death_001.png')).convert(),
+             pygame.image.load(path.join(hero_sprites, 'Death', 'Death_002.png')).convert(),
+             pygame.image.load(path.join(hero_sprites, 'Death', 'Death_003.png')).convert(),
+             pygame.image.load(path.join(hero_sprites, 'Death', 'Death_004.png')).convert(),
+             pygame.image.load(path.join(hero_sprites, 'Death', 'Death_005.png')).convert(),
+             pygame.image.load(path.join(hero_sprites, 'Death', 'Death_006.png')).convert(),
+             pygame.image.load(path.join(hero_sprites, 'Death', 'Death_007.png')).convert(),
+             pygame.image.load(path.join(hero_sprites, 'Death', 'Death_008.png')).convert(),
+             pygame.image.load(path.join(hero_sprites, 'Death', 'Death_009.png')).convert(),
+             pygame.image.load(path.join(hero_sprites, 'Death', 'Death_010.png')).convert(),
+             pygame.image.load(path.join(hero_sprites, 'Death', 'Death_011.png')).convert(),
+             pygame.image.load(path.join(hero_sprites, 'Death', 'Death_012.png')).convert(),
+             pygame.image.load(path.join(hero_sprites, 'Death', 'Death_013.png')).convert(),
+             pygame.image.load(path.join(hero_sprites, 'Death', 'Death_014.png')).convert()]
 
 mob_images = [male_walk_img, female_walk_img, male_dead_img, female_dead_img]
-hero_images = [hero_run, hero_shoot, hero_jump]
+hero_images = [hero_run, hero_shoot, hero_jump, hero_dead]
+
+font_name = pygame.font.match_font('arial')
+def draw_text(surf, text, size, x, y):
+    font = pygame.font.Font(font_name, size)
+    text_surface = font.render(text, True, WHITE)
+    text_rect = text_surface.get_rect()
+    text_rect.midtop = (x,y)
+
+    surf.blit(text_surface, text_rect)
 
 all_sprites = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
@@ -382,9 +425,8 @@ while running:
      # Check collision b/w mobs and bullets
     hits = pygame.sprite.groupcollide(mobs, bullets, False, True)
     for hit in hits:
-        print('Score: ', score,', Ammo: ', player.ammo)
         # Increase Score
-        score += 2
+        score += 2 + int(abs(hit.speedx))
         # Initiate Die Sequence
         hit.isDead = True
         # Drop Ammo
@@ -396,24 +438,42 @@ while running:
     hits = pygame.sprite.spritecollide(player, ammo, True)
     for hit in hits:
         player.ammo += 1
-        print('Score: ', score,', Ammo: ', player.ammo)
+
+    for m in mobs:
+        if abs(player.rect.bottom - m.rect.top) <= 40 and abs(player.rect.centerx - m.rect.centerx) <= 40:
+            mobs.remove(m)
+            score += 2 + int(abs(m.speedx))
+            # Initiate Die Sequence
+            m.isDead = True
+            # Drop Ammo
+            R = rn.randrange(3)
+            for i in range(R):
+                bullet = Ammo(m.rect.x, m.rect.bottom - 2)
 
      # Check collision b/w mobs and player
     hits = pygame.sprite.spritecollide(player, mobs, False, collided= pygame.sprite.collide_circle)
-    if hits or score >= 150:
-        running = False
-        print('GAMEOVER')
+    if hits:
+        player.isDead = 1
+        for hit in hits:
+            hit.speedx = 0
 
     all_sprites.update()
     
+    text = 'Score: ' + str(score) + '   Ammo: ' + str(player.ammo)
+
     # draw
     screen.fill(BLACK)
     ground = pygame.Rect(0, screenHeight * 0.75, screenWidth, screenHeight * 0.25)
     pygame.draw.rect(screen, PURPLE, ground)
     all_sprites.draw(screen)
+    draw_text(screen, text, 50, screenWidth / 2, 30)
 
     # flip display
     pygame.display.flip()
 
-print('Score: ', score,', Ammo: ', player.ammo)
+    if player.isDead == 2 or score > 300:
+        running = False
+        print('\nScore: ', score)
+        print('GameOver')
+
 pygame.quit()
