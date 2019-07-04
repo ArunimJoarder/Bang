@@ -4,7 +4,7 @@ from os import path
 import pygame
 import random as rn
 
-screenWidth     = 1280
+screenWidth     = 1275
 screenHeight    = 800
 FPS             = 60
 
@@ -16,7 +16,7 @@ YELLOW      = (255, 255, 0)
 GREEN       = (0, 255, 0)
 BLACK       = (0, 0, 0)
 WHITE       = (255, 255, 255)
-CYAN        = (0, 255, 255)
+CYAN        = (0, 150, 255)
 PURPLE      = (158,0,198)
 
 
@@ -43,7 +43,7 @@ class Mob(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
 
         self.rect           = self.image.get_rect()
-        self.rect.bottom   = 0.75 * screenHeight + 2
+        self.rect.bottom   =  screenHeight-20 + 2
         self.radius         = int(self.rect.width * .9 / 2)
         self.walkCount      = 0
 
@@ -58,17 +58,20 @@ class Mob(pygame.sprite.Sprite):
         # Motion
         if self.toss:
             self.image = pygame.transform.flip(self.image, True, False)
-            self.speedx = -0.5 * rn.randrange(2, 10)
+            self.speedx = -0.5 * rn.randrange(2, 10) * 60 / FPS
         else:
-            self.speedx = 0.5 * rn.randrange(2, 10)
+            self.speedx = 0.5 * rn.randrange(2, 10) * 60 / FPS
 
         self.isDead = False
         self.deadCount = 0
 
     def update(self):
+        toss = rn.randrange(0, 100)
+        if toss == 5:
+            rn.choice(zombie_sounds).play()
         if self.isDead:
             self.radius         = 1
-            self.rect.bottom    = 0.75 * screenHeight + 6
+            self.rect.bottom    = screenHeight-20 + 6
             self.image          = mob_images[self.gender_toss + 2][int(self.deadCount)]
             self.size           = self.image.get_size()
             self.image          = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
@@ -76,7 +79,7 @@ class Mob(pygame.sprite.Sprite):
                 self.image      = pygame.transform.flip(self.image, True, False)
             self.image.set_colorkey(BLACK)
 
-            self.deadCount += 0.5
+            self.deadCount += 0.5 * 60 / FPS
             if self.deadCount >= 12:
                 mob = Mob()
                 self.kill()
@@ -93,7 +96,7 @@ class Mob(pygame.sprite.Sprite):
 
             self.image.set_colorkey(BLACK)
 
-            self.walkCount      += 0.25 * abs(self.speedx)
+            self.walkCount      += 0.25 * abs(self.speedx) * 60 / FPS
             if self.walkCount > 9:
                 self.walkCount = 0
 
@@ -118,14 +121,14 @@ class Bullet(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         all_sprites.add(self)
         bullets.add(self)
-        self.image          = pygame.Surface((20,2))
+        self.image          = pygame.Surface((30,2))
         self.image.fill(CYAN)
         self.rect           = self.image.get_rect()
         self.rect.centery   = y - 10
         self.rect.centerx   = x
 
         # Motion
-        self.speedx = isFacing * 15
+        self.speedx = isFacing * 15 * 60 / FPS
 
     def update(self):
         self.rect.x += self.speedx
@@ -144,7 +147,7 @@ class Player(pygame.sprite.Sprite):
         self.image.set_colorkey(BLACK)
 
         self.rect           = self.image.get_rect()
-        self.rect.bottom    = 0.75 * screenHeight + 10
+        self.rect.bottom    = screenHeight-20 + 10
         self.rect.centerx   = screenWidth / 2
         self.radius         = int(self.rect.width * 0.3 / 2)
 
@@ -172,7 +175,7 @@ class Player(pygame.sprite.Sprite):
     
     def jump(self):
         self.rect.bottom = 1.5 * (self.jumpCount - 30) * self.jumpCount + self.bottom
-        self.jumpCount += 0.5
+        self.jumpCount += 0.5 * 60 / FPS
         if self.jumpCount > 30:
             self.jumpCount = 0
             self.isJumping = 0
@@ -180,6 +183,7 @@ class Player(pygame.sprite.Sprite):
     def shoot(self):
         self.runCount = 0
         self.isShooting = 1
+        pew_sound.play(loops = 0)
         bullet = Bullet(self.isFacing, self.rect.centerx, self.rect.centery)
 
     def update(self):
@@ -197,7 +201,7 @@ class Player(pygame.sprite.Sprite):
             
             self.image.set_colorkey(BLACK)
 
-            self.deadCount += 0.5
+            self.deadCount += 0.5 * 60 / FPS
             if self.deadCount > 14:
                 self.isDead = 2
                 self.deadCount = 0
@@ -207,11 +211,11 @@ class Player(pygame.sprite.Sprite):
             key_state = pygame.key.get_pressed()
             if key_state[pygame.K_RIGHT]:
                 self.isRunning  = 1
-                self.speedx     = 5
+                self.speedx     = 5 * 60 / FPS
                 self.isFacing   = 1
             if key_state[pygame.K_LEFT]:
                 self.isRunning  = 1
-                self.speedx     = -5
+                self.speedx     = -5 * 60 / FPS
                 self.isFacing   = -1
             if key_state[pygame.K_UP]:
                 self.isJumping  = 1
@@ -224,13 +228,13 @@ class Player(pygame.sprite.Sprite):
             # Update Motion
             if self.isShooting:
                 self.image = hero_images[1][int(self.shootCount)]
-                self.shootCount += 0.5
+                self.shootCount += 0.5 * 60 / FPS
                 if self.shootCount == 6:
                     self.shootCount = 0
                     self.isShooting = 0
             elif self.isRunning:
                 self.image      = hero_images[0][int(self.runCount)]
-                self.runCount   += 0.25
+                self.runCount   += 0.5 * 60 / FPS
                 if self.runCount == 13:
                     self.runCount = 0
             else:
@@ -257,7 +261,7 @@ class Player(pygame.sprite.Sprite):
             if self.rect.left < 0:
                 self.rect.left  = 0
 
-# define images
+# import images
 img = path.join(path.dirname(__file__), 'img')
 female_sprites = path.join(img, 'female')
 male_sprites = path.join(img, 'male')
@@ -381,9 +385,27 @@ hero_dead = [pygame.image.load(path.join(hero_sprites, 'Death', 'Death_000.png')
              pygame.image.load(path.join(hero_sprites, 'Death', 'Death_013.png')).convert(),
              pygame.image.load(path.join(hero_sprites, 'Death', 'Death_014.png')).convert()]
 
+bg = pygame.image.load(path.join(img, 'backGround', 'bg.png'))
+bg = pygame.transform.scale2x(bg)
+
 mob_images = [male_walk_img, female_walk_img, male_dead_img, female_dead_img]
 hero_images = [hero_run, hero_shoot, hero_jump, hero_dead]
 
+# import sounds
+snd = path.join(path.dirname(__file__), 'snd')
+zombie_sounds = []
+for sound in ['Zombie Attack Sound.wav', 'Zombie Sound.wav', 'Zombie Sound 2.wav']:
+    zombie_sounds.append(pygame.mixer.Sound(path.join(snd, sound)))
+for sound in zombie_sounds:
+    sound.set_volume(0.01)
+
+pew_sound = pygame.mixer.Sound(path.join(snd, 'laser1.wav'))
+pew_sound.set_volume(0.05)
+death_sound = pygame.mixer.Sound(path.join(snd, 'death.ogg'))
+death_sound.set_volume(0.1)
+pygame.mixer.music.load(path.join(snd, 'aosi - doom.wav'))
+
+# define text
 font_name = pygame.font.match_font('arial')
 def draw_text(surf, text, size, x, y):
     font = pygame.font.Font(font_name, size)
@@ -405,6 +427,7 @@ for i in range(5):
     m = Mob()
 
 # Game loop
+pygame.mixer.music.play(loops = -1)
 score = 0
 running = True
 while running:
@@ -453,6 +476,7 @@ while running:
      # Check collision b/w mobs and player
     hits = pygame.sprite.spritecollide(player, mobs, False, collided= pygame.sprite.collide_circle)
     if hits:
+        death_sound.play()
         player.isDead = 1
         for hit in hits:
             hit.speedx = 0
@@ -462,9 +486,9 @@ while running:
     text = 'Score: ' + str(score) + '   Ammo: ' + str(player.ammo)
 
     # draw
-    screen.fill(BLACK)
-    ground = pygame.Rect(0, screenHeight * 0.75, screenWidth, screenHeight * 0.25)
-    pygame.draw.rect(screen, PURPLE, ground)
+    screen.blit(bg, (0,0))
+    ground = pygame.rect.Rect(0,screenHeight-20, screenWidth, 25)
+    pygame.draw.rect(screen, BLACK, ground)
     all_sprites.draw(screen)
     draw_text(screen, text, 50, screenWidth / 2, 30)
 
