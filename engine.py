@@ -454,6 +454,7 @@ all_sprites.add(player)
 
 kills = 0
 wavechange = 0
+mobAdd = 0
 
 # Game loop
 pygame.mixer.music.play(loops = -1)
@@ -500,6 +501,7 @@ while running:
     for hit in hits:
         if hit.isDead == False:
             # Increase Score
+            mobAdd = 0
             kills += 1
             score += 2 + int(abs(hit.speedx))
             # Initiate Die Sequence
@@ -519,6 +521,7 @@ while running:
     for m in mobs:
         if abs(player.rect.bottom - m.rect.top) <= 40 and abs(player.rect.centerx - m.rect.centerx) <= 40:
             mobs.remove(m)
+            mobAdd = 0
             kills += 1
             score += 2 + int(abs(m.speedx))
             # Initiate Die Sequence
@@ -542,10 +545,11 @@ while running:
     text = 'Score: ' + str(score) + '   Ammo: ' + str(player.ammo)
 
      # spawn extra mob for every 40 kills
-    for i in range(int(kills / 40)):
-        wavechange = 1
-        m = Mob()
-        kills = 0
+    for i in range(int((kills % 41) / 40)):
+        if mobAdd == 0:
+            mobAdd = 1
+            wavechange += 1
+            m = Mob()
 
     # draw
     screen.blit(bg, (0,0))
@@ -557,7 +561,7 @@ while running:
     if wavechange:
         draw_text(screen, 'More Mobs Added', 64, screenWidth / 2, screenHeight / 2 - 100)
         wavechange += 1
-        wavechange %= 60
+        wavechange %= 30
 
     # flip display
     pygame.display.flip()
