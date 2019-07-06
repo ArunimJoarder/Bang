@@ -1,6 +1,6 @@
-# Bang
+# Bang!
 
-Links for Sounds:
+#### Links for Sounds:
 - Laser:
     * https://opengameart.org/content/laser-fire
 - Background Music
@@ -12,10 +12,10 @@ Links for Sounds:
 - Character Death
     * https://opengameart.org/content/hurt-death-sound-effect-for-character
 
-Links for Images:
+#### Links for Images:
 - Zombies
     * https://opengameart.org/content/the-zombie-free-sprites
 - Main Character
     * https://opengameart.org/content/2d-game-character-pack-slim-version
-- BackGround
+- Background
     * https://opengameart.org/content/night-forest-background

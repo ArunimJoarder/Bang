@@ -19,9 +19,9 @@ WHITE       = (255, 255, 255)
 CYAN        = (0, 150, 255)
 PURPLE      = (158,0,198)
 
-
-
-
+# check bestscore from log file
+scoresFiles = open(path.join(path.dirname(__file__), 'log.txt'), 'r+')
+bestscore = int(scoresFiles.readline())
 
 # initialize pygame and create a window
 pygame.init()
@@ -29,6 +29,12 @@ pygame.mixer.init()
 screen = pygame.display.set_mode((screenWidth, screenHeight))
 pygame.display.set_caption("Bang!")
 clock = pygame.time.Clock()
+
+def scale_img(img, scale = 0.2):
+    size = img.get_size()
+    image = pygame.transform.scale(img, (int(size[0] * scale), int(size[1] * scale)))
+    
+    return image
 
 class Mob(pygame.sprite.Sprite):
     def __init__(self):
@@ -39,8 +45,7 @@ class Mob(pygame.sprite.Sprite):
         self.gender_toss = rn.randint(0, 1)
 
         self.image          = mob_images[self.gender_toss][0]
-        self.size = self.image.get_size()
-        self.image = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
+        self.image          = scale_img(self.image)
 
         self.rect           = self.image.get_rect()
         self.rect.bottom   =  screenHeight-20 + 2
@@ -58,9 +63,9 @@ class Mob(pygame.sprite.Sprite):
         # Motion
         if self.toss:
             self.image = pygame.transform.flip(self.image, True, False)
-            self.speedx = -0.5 * rn.randrange(2, 10) * 60 / FPS
+            self.speedx = -0.5 * rn.randrange(2, 10)
         else:
-            self.speedx = 0.5 * rn.randrange(2, 10) * 60 / FPS
+            self.speedx = 0.5 * rn.randrange(2, 10)
 
         self.isDead = False
         self.deadCount = 0
@@ -73,13 +78,13 @@ class Mob(pygame.sprite.Sprite):
             self.radius         = 1
             self.rect.bottom    = screenHeight-20 + 6
             self.image          = mob_images[self.gender_toss + 2][int(self.deadCount)]
-            self.size           = self.image.get_size()
-            self.image          = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
+            self.image          = scale_img(self.image)
+
             if self.toss:
                 self.image      = pygame.transform.flip(self.image, True, False)
             self.image.set_colorkey(BLACK)
 
-            self.deadCount += 0.5 * 60 / FPS
+            self.deadCount += 0.5
             if self.deadCount >= 12:
                 mob = Mob()
                 self.kill()
@@ -89,14 +94,14 @@ class Mob(pygame.sprite.Sprite):
 
             self.image          = mob_images[self.gender_toss][int(self.walkCount)]
             self.image.set_colorkey(BLACK)        
-            self.size           = self.image.get_size()
-            self.image          = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
+            self.image          = scale_img(self.image)
+
             if self.toss:
                 self.image      = pygame.transform.flip(self.image, True, False)
 
             self.image.set_colorkey(BLACK)
 
-            self.walkCount      += 0.25 * abs(self.speedx) * 60 / FPS
+            self.walkCount      += 0.25 * abs(self.speedx)
             if self.walkCount > 9:
                 self.walkCount = 0
 
@@ -113,7 +118,7 @@ class Ammo(pygame.sprite.Sprite):
         self.image          = pygame.Surface((10,5))
         self.image.fill(RED)
         self.rect           = self.image.get_rect()
-        self.rect.bottom    = y
+        self.rect.bottom    = y - 2
         self.rect.centerx   = x
 
 class Bullet(pygame.sprite.Sprite):
@@ -128,7 +133,7 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.centerx   = x
 
         # Motion
-        self.speedx = isFacing * 15 * 60 / FPS
+        self.speedx = isFacing * 60
 
     def update(self):
         self.rect.x += self.speedx
@@ -142,8 +147,7 @@ class Player(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
 
         self.image          = hero_images[0][0]
-        self.size           = self.image.get_size()
-        self.image          = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
+        self.image          = scale_img(self.image)
         self.image.set_colorkey(BLACK)
 
         self.rect           = self.image.get_rect()
@@ -171,11 +175,11 @@ class Player(pygame.sprite.Sprite):
         # Arms & Ammunition
         self.isShooting     = 0
         self.shootCount = 0
-        self.ammo = 15
+        self.ammo = 10
     
     def jump(self):
         self.rect.bottom = 1.5 * (self.jumpCount - 30) * self.jumpCount + self.bottom
-        self.jumpCount += 0.5 * 60 / FPS
+        self.jumpCount += 0.5
         if self.jumpCount > 30:
             self.jumpCount = 0
             self.isJumping = 0
@@ -191,17 +195,17 @@ class Player(pygame.sprite.Sprite):
         self.speedx = 0
 
         if self.isDead:
-            self.image  = hero_images[3][int(self.deadCount)]
+            self.rect.bottom    = screenHeight-20 + 10
+            self.image          = hero_images[3][int(self.deadCount)]
             
-            self.size       = self.image.get_size()
-            self.image      = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
+            self.image          = scale_img(self.image)
 
             if self.isFacing == -1:
                 self.image  = pygame.transform.flip(self.image, True, False)
             
             self.image.set_colorkey(BLACK)
 
-            self.deadCount += 0.5 * 60 / FPS
+            self.deadCount += 0.5
             if self.deadCount > 14:
                 self.isDead = 2
                 self.deadCount = 0
@@ -211,11 +215,11 @@ class Player(pygame.sprite.Sprite):
             key_state = pygame.key.get_pressed()
             if key_state[pygame.K_RIGHT]:
                 self.isRunning  = 1
-                self.speedx     = 5 * 60 / FPS
+                self.speedx     = 5
                 self.isFacing   = 1
             if key_state[pygame.K_LEFT]:
                 self.isRunning  = 1
-                self.speedx     = -5 * 60 / FPS
+                self.speedx     = -5
                 self.isFacing   = -1
             if key_state[pygame.K_UP]:
                 self.isJumping  = 1
@@ -228,13 +232,13 @@ class Player(pygame.sprite.Sprite):
             # Update Motion
             if self.isShooting:
                 self.image = hero_images[1][int(self.shootCount)]
-                self.shootCount += 0.5 * 60 / FPS
+                self.shootCount += 0.5
                 if self.shootCount == 6:
                     self.shootCount = 0
                     self.isShooting = 0
             elif self.isRunning:
                 self.image      = hero_images[0][int(self.runCount)]
-                self.runCount   += 0.5 * 60 / FPS
+                self.runCount   += 0.5
                 if self.runCount == 13:
                     self.runCount = 0
             else:
@@ -243,8 +247,7 @@ class Player(pygame.sprite.Sprite):
             if self.isJumping:
                 self.image = hero_images[2][int(self.jumpCount)]
 
-            self.size       = self.image.get_size()
-            self.image      = pygame.transform.scale(self.image, (int(self.size[0] / 5), int(self.size[1] / 5)))
+            self.image          = scale_img(self.image)
 
             if self.isFacing == -1:
                 self.image  = pygame.transform.flip(self.image, True, False)
@@ -386,7 +389,7 @@ hero_dead = [pygame.image.load(path.join(hero_sprites, 'Death', 'Death_000.png')
              pygame.image.load(path.join(hero_sprites, 'Death', 'Death_014.png')).convert()]
 
 bg = pygame.image.load(path.join(img, 'backGround', 'bg.png'))
-bg = pygame.transform.scale2x(bg)
+bg = scale_img(bg, scale=2)
 
 mob_images = [male_walk_img, female_walk_img, male_dead_img, female_dead_img]
 hero_images = [hero_run, hero_shoot, hero_jump, hero_dead]
@@ -404,6 +407,7 @@ pew_sound.set_volume(0.05)
 death_sound = pygame.mixer.Sound(path.join(snd, 'death.ogg'))
 death_sound.set_volume(0.1)
 pygame.mixer.music.load(path.join(snd, 'aosi - doom.wav'))
+pygame.mixer.music.set_volume(10)
 
 # define text
 font_name = pygame.font.match_font('arial')
@@ -415,6 +419,31 @@ def draw_text(surf, text, size, x, y):
 
     surf.blit(text_surface, text_rect)
 
+# define Gameover Screen
+def showGameOverScreen():
+    waiting = True
+
+    while waiting:
+        clock.tick(FPS)
+        screen.blit(bg, (0,0))
+        draw_text(screen, 'Best Score: ' + str(bestscore) + '    Last Score: ' + str(score), 30, screenWidth / 2, 30)
+        draw_text(screen, 'BANG!', 256, screenWidth / 2, screenHeight / 4)
+        draw_text(screen, 'ARROW Keys for movement , SPACE Key for shooting', 40, screenWidth / 2, screenHeight - 200)
+        draw_text(screen, 'Press ENTER key to start', 20, screenWidth / 2, screenHeight - 50)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                waiting = False
+                running = False
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_RETURN:
+                    waiting = False
+                    running = True
+        
+        pygame.display.flip()
+    
+    return running
+
 all_sprites = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
@@ -423,14 +452,35 @@ ammo = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
 
-for i in range(5):
-    m = Mob()
+kills = 0
+wavechange = 0
 
 # Game loop
 pygame.mixer.music.play(loops = -1)
+
 score = 0
+gameover = True
 running = True
 while running:
+
+    if gameover:
+        all_sprites.empty()
+        bullets.empty()
+        mobs.empty()
+        ammo.empty()
+
+        running = showGameOverScreen()
+
+        player = Player()
+        all_sprites.add(player)
+
+        for i in range(3):
+            m = Mob()
+
+        kills = 0
+        score = 0
+        gameover = False
+
     # keep loop running at the right speed
     clock.tick(FPS)
     
@@ -448,30 +498,36 @@ while running:
      # Check collision b/w mobs and bullets
     hits = pygame.sprite.groupcollide(mobs, bullets, False, True)
     for hit in hits:
-        # Increase Score
-        score += 2 + int(abs(hit.speedx))
-        # Initiate Die Sequence
-        hit.isDead = True
-        # Drop Ammo
-        R = rn.randrange(3)
-        for i in range(R):
-            bullet = Ammo(hit.rect.x, hit.rect.bottom - 2) 
+        if hit.isDead == False:
+            # Increase Score
+            kills += 1
+            score += 2 + int(abs(hit.speedx))
+            # Initiate Die Sequence
+            hit.isDead = True
+            # Drop Ammo
+            R = rn.randrange(3)
+            for i in range(R):
+                bullet = Ammo(hit.rect.x, hit.rect.bottom)
+            print('Kills: ', kills)
 
      # Check collision b/w player and ammo
     hits = pygame.sprite.spritecollide(player, ammo, True)
     for hit in hits:
         player.ammo += 1
-
+    
+     # Check wether player has squashed mob
     for m in mobs:
         if abs(player.rect.bottom - m.rect.top) <= 40 and abs(player.rect.centerx - m.rect.centerx) <= 40:
             mobs.remove(m)
+            kills += 1
             score += 2 + int(abs(m.speedx))
             # Initiate Die Sequence
             m.isDead = True
             # Drop Ammo
             R = rn.randrange(3)
             for i in range(R):
-                bullet = Ammo(m.rect.x, m.rect.bottom - 2)
+                bullet = Ammo(m.rect.x, m.rect.bottom)
+            print('Kills: ', kills)
 
      # Check collision b/w mobs and player
     hits = pygame.sprite.spritecollide(player, mobs, False, collided= pygame.sprite.collide_circle)
@@ -485,6 +541,12 @@ while running:
     
     text = 'Score: ' + str(score) + '   Ammo: ' + str(player.ammo)
 
+     # spawn extra mob for every 40 kills
+    for i in range(int(kills / 40)):
+        wavechange = 1
+        m = Mob()
+        kills = 0
+
     # draw
     screen.blit(bg, (0,0))
     ground = pygame.rect.Rect(0,screenHeight-20, screenWidth, 25)
@@ -492,12 +554,23 @@ while running:
     all_sprites.draw(screen)
     draw_text(screen, text, 50, screenWidth / 2, 30)
 
+    if wavechange:
+        draw_text(screen, 'More Mobs Added', 64, screenWidth / 2, screenHeight / 2 - 100)
+        wavechange += 1
+        wavechange %= 60
+
     # flip display
     pygame.display.flip()
 
-    if player.isDead == 2 or score > 300:
-        running = False
-        print('\nScore: ', score)
+    if player.isDead == 2:
+        gameover = True
+        bestscore = max(bestscore, score)
+        # scoresFiles.write('\n')
+        scoresFiles.seek(0)
+        scoresFiles.write(str(bestscore))
+        print('\nScore: ', score, 'Kills: ', kills)
         print('GameOver')
 
+
+scoresFiles.close()
 pygame.quit()
