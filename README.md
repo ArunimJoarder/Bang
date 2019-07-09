@@ -1,16 +1,20 @@
 # Bang!
 
 ## Description
-This is a 2D shooting game based on Pygame. The basic motive of the game is to kill as many enemies you can. The number of enemies on -screen at a time will gradually increase with the number of kills.
 
-You can shoot the Zombies or you can squash themm by jumoing over them.
+This is a 2D shooting game based on Pygame. The basic motive of the game is to kill as many enemies you can and increase your score. The number of enemies on-screen at a time will gradually increase with the number of kills.
+
+**You can shoot the Zombies or you can squash them by jumping over them.**
 
 ### Controls
+
 * UP Arrow Key    - Jumping
 * LEFT Arrow Key  - Move Left
 * RIGHT Arrow Key - Move Right
 * SPACE Key       - Shoot Bullets
-#### Links for Sounds:
+
+#### Links for Sounds
+
 - Laser:
     * <https://opengameart.org/content/laser-fire>
 - Background Music:
@@ -22,7 +26,8 @@ You can shoot the Zombies or you can squash themm by jumoing over them.
 - Character Death:
     * <https://opengameart.org/content/hurt-death-sound-effect-for-character>
 
-#### Links for Images:
+#### Links for Images
+
 - Zombies:
     * <https://opengameart.org/content/the-zombie-free-sprites>
 - Main Character:
